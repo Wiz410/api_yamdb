@@ -12,9 +12,9 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
 from rest_framework.viewsets import ModelViewSet
 
-
-from reviews.models import Categories, Genres, Titles
+from reviews.models import Categories, Genres, Titles, Review
 from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
+from .serializers import CommentsSerializer, ReviewSerializer
 from .permissions import AdminOnly
 from .serializers import UsersSerializer
 from .serializers import UserUpdateSerializer
@@ -49,6 +49,39 @@ class TitlesViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
+    
+    
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Получение списка/создание/обновление/удаление отзывов."""
+    serializer_class = ReviewSerializer
+
+    def define_title(self):
+        return get_object_or_404(Titles, id=self.kwargs.get("title_id"))
+
+    def get_queryset(self):
+        title = self.define_title()
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = self.define_title()
+        serializer.save(author=self.request.user, title=title)
+
+
+class CommentsViewSet(ReviewViewSet):
+    """Получение списка/создание/обновление/удаление комментариев."""
+    serializer_class = CommentsSerializer
+
+    def define_review(self):
+        return get_object_or_404(Review, id=self.kwargs.get("review_id"))
+
+    def get_queryset(self):
+        review = self.define_review()
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = self.define_review()
+        serializer.save(author=self.request.user, review=review)
+
 
 
 class UsersViewSet(ModelViewSet):
