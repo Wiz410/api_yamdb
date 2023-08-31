@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -10,11 +12,43 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
 from rest_framework.viewsets import ModelViewSet
 
+
+from reviews.models import Categories, Genres, Titles
+from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
 from .permissions import AdminOnly
 from .serializers import UsersSerializer
 from .serializers import UserUpdateSerializer
 
+
 User = get_user_model()
+
+
+class CreateListDestroyViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
+                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    pass
+
+
+class CategoriesViewSet(CreateListDestroyViewSet):
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('slug',)
+
+class GenresViewSet(CreateListDestroyViewSet):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('slug',)
+
+
+class TitlesViewSet(viewsets.ModelViewSet):
+    queryset = Titles.objects.all()
+    serializer_class = TitlesSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
 
 
 class UsersViewSet(ModelViewSet):
