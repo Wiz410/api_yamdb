@@ -1,7 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from users.models import MyUser
+
+User = get_user_model()
 
 
 class Review(models.Model):
@@ -19,13 +21,13 @@ class Review(models.Model):
         verbose_name='Дата отзыва'
     )
     title = models.ForeignKey(
-        Titles,
+        'Titles',
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение'
     )
     author = models.ForeignKey(
-        MyUser,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор'
@@ -56,7 +58,7 @@ class Comments(models.Model):
         verbose_name='Отзыв'
     )
     author = models.ForeignKey(
-        MyUser,
+        User,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор'
@@ -89,7 +91,7 @@ class Titles(models.Model):
     description = models.TextField(null=True, blank=True)
     genre = models.ManyToManyField(Genres, through='GenresTitles',)
     category = models.ForeignKey(
-        Categories, on_delete=models.SET_NULL, 
+        Categories, on_delete=models.SET_NULL,
         null=True, related_name='titles'
     )
 
@@ -98,7 +100,9 @@ class Titles(models.Model):
 
 
 class GenresTitles(models.Model):
-    genre = models.ForeignKey(Genres, on_delete=models.SET_NULL, 
+    genre = models.ForeignKey(
+        Genres,
+        on_delete=models.SET_NULL,
         null=True
     )
     titles = models.ForeignKey(Titles, on_delete=models.CASCADE)
