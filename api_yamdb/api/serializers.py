@@ -76,8 +76,6 @@ class CommentsSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
         read_only_fields = ('title',)
 
-###################
-
 
 class UsersSerializer(serializers.ModelSerializer):
     """Сериализатор модели `MyUser`."""
