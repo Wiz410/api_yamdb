@@ -1,3 +1,4 @@
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -14,6 +15,12 @@ class MyUser(AbstractUser):
         'Имя пользователя',
         unique=True,
         max_length=150,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Некорректный ввод'
+            )
+        ]
     )
     email = models.EmailField(
         'Адрес электронной почты',
@@ -46,7 +53,7 @@ class MyUser(AbstractUser):
     )
     confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=500,
+        max_length=100,
         blank=True,
     )
 

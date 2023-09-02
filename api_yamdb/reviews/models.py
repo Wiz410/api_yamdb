@@ -19,7 +19,7 @@ class Review(models.Model):
         verbose_name='Дата отзыва'
     )
     title = models.ForeignKey(
-        Titles,
+        'Titles',
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение'
@@ -89,7 +89,7 @@ class Titles(models.Model):
     description = models.TextField(null=True, blank=True)
     genre = models.ManyToManyField(Genres, through='GenresTitles',)
     category = models.ForeignKey(
-        Categories, on_delete=models.SET_NULL, 
+        Categories, on_delete=models.SET_NULL,
         null=True, related_name='titles'
     )
 
@@ -98,10 +98,15 @@ class Titles(models.Model):
 
 
 class GenresTitles(models.Model):
-    genre = models.ForeignKey(Genres, on_delete=models.SET_NULL, 
-        null=True
+    genre = models.ForeignKey(
+        Genres,
+        on_delete=models.SET_NULL,
+        null=True,
     )
-    titles = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    titles = models.ForeignKey(
+        Titles,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f'{self.genre} {self.titles}'

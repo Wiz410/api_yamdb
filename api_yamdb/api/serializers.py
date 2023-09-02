@@ -1,8 +1,6 @@
 import datetime as dt
 
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import RegexField
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 
@@ -37,7 +35,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Titles
         fields = '__all__'
-    
+
     def validate_year(self, value):
         """
         Проверка года выпуска
@@ -78,8 +76,10 @@ class CommentsSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
         read_only_fields = ('title',)
 
+###################
 
-class UsersSerializer(ModelSerializer):
+
+class UsersSerializer(serializers.ModelSerializer):
     """Сериализатор модели `MyUser`."""
 
     class Meta:
@@ -100,11 +100,11 @@ class UsersSerializer(ModelSerializer):
         ]
 
 
-class UserUpdateSerializer(ModelSerializer):
+class UserUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор модели `MyUser` для обновления данных."""
-    username = RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
 
     class Meta:
+        model = User
         fields = (
             'username',
             'email',
@@ -114,4 +114,53 @@ class UserUpdateSerializer(ModelSerializer):
             'role',
         )
         read_only_fields = ('role',)
+
+
+class SignUpSerializer(serializers.Serializer):
+    """Сериализатор модели `MyUser` для регистрации."""
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
+        max_length=150,
+        required=True
+    )
+    email = serializers.EmailField(max_length=254, required=True)
+
+    class Meta:
+        fields = (
+            'username',
+            'email'
+        )
+
+    def validate(self, value):
+        user = value['username']
+        mail = value['email']
+        if User.objects.filter(
+            username=user
+        ) and User.objects.filter(
+            email=mail
+        ):
+            return value
+        if user == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" запрещено!'
+            )
+        if User.objects.filter(username=value['username']):
+            raise serializers.ValidationError(
+                f'Пользователь с именем {user} уже есть!'
+            )
+        if User.objects.filter(email=value['email']):
+            raise serializers.ValidationError(
+                f'Пользователь с почтой {mail} уже есть!'
+            )
+        return value
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    """Сериализатор модели `MyUser` для получения токена."""
+
+    class Meta:
         model = User
+        fields = (
+            'username',
+            'confirmation_code'
+        )
