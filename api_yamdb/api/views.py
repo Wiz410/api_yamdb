@@ -196,7 +196,7 @@ class APISingUp(views.APIView):
             current_user.confirmation_code = str(code)
             current_user.save()
             send_mail(
-                subject='Код подтверждения YAMDB.',
+                subject='Confirmation code YAMDB.',
                 message=(
                     f'Ваш код подтверждения "{str(code)}" '
                     'для сервиса YAMDB.'

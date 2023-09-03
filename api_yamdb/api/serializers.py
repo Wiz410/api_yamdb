@@ -133,14 +133,13 @@ class SignUpSerializer(serializers.Serializer):
         user = value['username']
         mail = value['email']
         if User.objects.filter(
-            username=user
-        ) and User.objects.filter(
+            username=user,
             email=mail
         ):
             return value
         if user == 'me':
             raise serializers.ValidationError(
-                'Имя пользователя "me" запрещено!'
+                'Имя пользователя me запрещено!'
             )
         if User.objects.filter(username=value['username']):
             raise serializers.ValidationError(
