@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Review, Comments
+from .models import Review, Comments, Titles, Categories, Genres
 
 
 class ReviewAdmin(admin.ModelAdmin):
@@ -18,5 +18,27 @@ class CommentsAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
+class GenresAdmin(admin.ModelAdmin):
+    list_display = ('slug', 'name')
+    search_fields = ('slug',)
+    empty_value_display = '-пусто-'
+
+
+class CategoriesAdmin(admin.ModelAdmin):
+    list_display = ('slug', 'name')
+    search_fields = ('slug',)
+    empty_value_display = '-пусто-'
+
+
+class TitlesAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description', 'category')
+    search_fields = ('genre__slug', 'category__slug', 'year', 'name')
+    list_editable = ('name', 'description', 'category')
+    empty_value_display = '-пусто-'
+
+
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comments, CommentsAdmin)
+admin.site.register(Genres, GenresAdmin)
+admin.site.register(Categories, CategoriesAdmin)
+admin.site.register(Titles, TitlesAdmin)
