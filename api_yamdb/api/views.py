@@ -1,26 +1,26 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters
+from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_400_BAD_REQUEST,
-    HTTP_405_METHOD_NOT_ALLOWED
-)
+from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
 from rest_framework.viewsets import ModelViewSet
 
 from reviews.models import Categories, Genres, Titles, Review
-from .permissions import AdminOnly, AuthorModeratorAdminOrReadOnly
-from .serializers import (
-    UsersSerializer, UserUpdateSerializer,
-    CategoriesSerializer, GenresSerializer, TitlesSerializer,
-    CommentsSerializer, ReviewSerializer
-)
+from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
+from .serializers import CommentsSerializer, ReviewSerializer
+from .permissions import AdminOnly
+from .serializers import UsersSerializer
+from .serializers import UserUpdateSerializer
 
 
 User = get_user_model()
@@ -92,6 +92,7 @@ class CommentsViewSet(ReviewViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
+
 class UsersViewSet(ModelViewSet):
     """Обработка запросов `users`.
     Запросы к `api/v1/users/` доступны
@@ -121,7 +122,7 @@ class UsersViewSet(ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
-            return Response(status=HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         user = get_object_or_404(User, username=kwargs['username'])
         serializer = self.serializer_class(
             user,
@@ -130,8 +131,14 @@ class UsersViewSet(ModelViewSet):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=HTTP_200_OK)
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(
         methods=['get', 'patch'],
@@ -139,10 +146,16 @@ class UsersViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
-        user = get_object_or_404(User, username=request.user.username)
+        user = get_object_or_404(
+            User,
+            username=request.user.username
+        )
         if self.action == 'get':
             serializer = UserUpdateSerializer(user)
-            return Response(serializer.data, status=HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
         serializer = UserUpdateSerializer(
             user,
             data=request.data,
@@ -150,5 +163,82 @@ class UsersViewSet(ModelViewSet):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=HTTP_200_OK)
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class APISingUp(views.APIView):
+    """Регистрация пользователя.
+    Запросы к `api/v1/auth/signup/` доступны всем пользователям.
+
+    Returns:
+        POST(json): Создание пользователя и код подтверждения для API.
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        if serializer.is_valid():
+            code = uuid.uuid4()
+            current_user, created = User.objects.get_or_create(
+                **serializer.validated_data
+            )
+            current_user.confirmation_code = str(code)
+            current_user.save()
+            send_mail(
+                subject='Confirmation code YAMDB.',
+                message=(
+                    f'Ваш код подтверждения "{str(code)}" '
+                    'для сервиса YAMDB.'
+                ),
+                from_email='code@yamdb.ru',
+                recipient_list=[serializer.validated_data['email']],
+                fail_silently=True,
+            )
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class APIToken(views.APIView):
+    """Получение Токена.
+    Запросы к `api/v1/auth/token/` доступны всем пользователям.
+
+    Returns:
+        POST(json): Создание токена для API.
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['username']
+            conf_code = serializer.validated_data['confirmation_code']
+            user = get_object_or_404(
+                User, username=user
+            )
+            if user.confirmation_code == conf_code:
+                token = RefreshToken.for_user(user)
+                return Response(
+                    {'token': str(token.access_token)},
+                    status=status.HTTP_200_OK
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
