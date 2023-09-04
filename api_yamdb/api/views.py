@@ -27,6 +27,26 @@ from .serializers import (
     TokenSerializer,
 )
 from .permissions import AdminOnly
+=======
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_405_METHOD_NOT_ALLOWED
+)
+from rest_framework.viewsets import ModelViewSet
+
+from reviews.models import Categories, Genres, Titles, Review
+from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
+from .serializers import CommentsSerializer, ReviewSerializer
+from .permissions import AdminOnly, AdminOrReadOnly
+from .serializers import UsersSerializer
+from .serializers import UserUpdateSerializer
+from .permissions import AdminOnly, AuthorModeratorAdminOrReadOnly
+from .serializers import (
+    UsersSerializer, UserUpdateSerializer,
+    CategoriesSerializer, GenresSerializer, TitlesSerializer,
+    CommentsSerializer, ReviewSerializer
+)
 
 
 User = get_user_model()
@@ -44,30 +64,37 @@ class CreateListDestroyViewSet(
 class CategoriesViewSet(CreateListDestroyViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
+
 
 
 class GenresViewSet(CreateListDestroyViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
+
+    def update(self):
+        return Response(status=HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Получение списка/создание/обновление/удаление отзывов."""
     serializer_class = ReviewSerializer
+    permission_classes = (AuthorModeratorAdminOrReadOnly,)
 
     def define_title(self):
         return get_object_or_404(Titles, id=self.kwargs.get("title_id"))
@@ -98,6 +125,7 @@ class CommentsViewSet(ReviewViewSet):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+
     """Обработка запросов `users`.
     Запросы к `api/v1/users/` доступны
     только админу и суперпользователю.
