@@ -29,6 +29,8 @@ class Command(BaseCommand):
     help = 'Импорт данных из csv в базу данных.'
 
     def handle(self, *args, **kwargs):
+        """Импорт данных.
+        """
         for model, path in MODEL_PATH:
             with open(
                 path,
@@ -39,14 +41,25 @@ class Command(BaseCommand):
                     print(model)
                     print(data)
                     if data.get('category') is not None:
-                        data['category'] = Categories.objects.get(id=data['category'])
+                        data['category'] = Categories.objects.get(
+                            id=data['category']
+                        )
                     if data.get('author') is not None:
-                        data['author'] = MyUser.objects.get(id=data['author'])
+                        data['author'] = MyUser.objects.get(
+                            id=data['author']
+                        )
                     if data.get('title') is not None:
-                        data['title'] = Titles.objects.get(id=data['title'])
-                    if data.get('title_id') is not None and data.get('genre_id') is not None:
-                        data['title_id'] = Titles.objects.get(id=data['title_id'])
-                        data['genre_id'] = Genres.objects.get(id=data['genre_id'])
+                        data['title'] = Titles.objects.get(
+                            id=data['title']
+                        )
+                    if (data.get('title_id') is not None
+                       and data.get('genre_id') is not None):
+                        data['title_id'] = Titles.objects.get(
+                            id=data['title_id']
+                        )
+                        data['genre_id'] = Genres.objects.get(
+                            id=data['genre_id']
+                        )
                     print(data)
                     model.objects.create(**data)
         self.stdout.write(

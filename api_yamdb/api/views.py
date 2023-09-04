@@ -4,7 +4,13 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters, status, views
+from rest_framework import (
+    viewsets,
+    mixins,
+    filters,
+    status,
+    views
+)
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -13,27 +19,21 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Categories, Genres, Titles, Review
-from api.serializers import (
-    CategoriesSerializer,
-    GenresSerializer,
-    TitlesSerializer,
-)
 from .serializers import (
     UsersSerializer,
     UserUpdateSerializer,
     CommentsSerializer,
+    CategoriesSerializer,
+    GenresSerializer,
     ReviewSerializer,
+    TitlesSerializer,
     SignUpSerializer,
     TokenSerializer,
 )
-from rest_framework.viewsets import ModelViewSet
-
-from reviews.models import Categories, Genres, Titles, Review
-from .permissions import AdminOnly, AdminOrReadOnly, AuthorModeratorAdminOrReadOnly
-from .serializers import (
-    UsersSerializer, UserUpdateSerializer,
-    CategoriesSerializer, GenresSerializer, TitlesSerializer,
-    CommentsSerializer, ReviewSerializer
+from .permissions import (
+    AdminOnly,
+    AdminOrReadOnly,
+    AuthorModeratorAdminOrReadOnly
 )
 
 
@@ -56,7 +56,6 @@ class CategoriesViewSet(CreateListDestroyViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = ('slug')
-
 
 
 class GenresViewSet(CreateListDestroyViewSet):

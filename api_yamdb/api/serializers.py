@@ -57,7 +57,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         if value > dt.datetime.now().year:
             raise serializers.ValidationError('Неправильно указан год выпуска')
         return value
-    
+
     def create(self, validated_data):
         category = validated_data['category']
         genre = validated_data['genre']

@@ -39,12 +39,11 @@ class Review(models.Model):
         verbose_name='Произведение'
     )
     author = models.ForeignKey(
-        MyUser,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор'
     )
-
 
     class Meta:
         ordering = ('-pub_date',)
@@ -113,20 +112,16 @@ class Titles(models.Model):
 
 
 class GenresTitles(models.Model):
-    genre = models.ForeignKey(
+    genre_id = models.ForeignKey(
         Genres,
         on_delete=models.SET_NULL,
-<<<<<<<<< Temporary merge branch 1
         null=True,
     )
-    titles = models.ForeignKey(
+    title_id = models.ForeignKey(
         Titles,
-        on_delete=models.CASCADE
-=========
+        on_delete=models.CASCADE,
         null=True
->>>>>>>>> Temporary merge branch 2
     )
-    title_id = models.ForeignKey(Titles, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.genre} {self.titles}'
