@@ -1,15 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters, permissions
+from rest_framework import viewsets, mixins, filters
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
-from rest_framework.status import HTTP_400_BAD_REQUEST
-from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_405_METHOD_NOT_ALLOWED
+)
 from rest_framework.viewsets import ModelViewSet
 
 from reviews.models import Categories, Genres, Titles, Review
@@ -18,13 +20,23 @@ from .serializers import CommentsSerializer, ReviewSerializer
 from .permissions import AdminOnly, AdminOrReadOnly
 from .serializers import UsersSerializer
 from .serializers import UserUpdateSerializer
+from .permissions import AdminOnly, AuthorModeratorAdminOrReadOnly
+from .serializers import (
+    UsersSerializer, UserUpdateSerializer,
+    CategoriesSerializer, GenresSerializer, TitlesSerializer,
+    CommentsSerializer, ReviewSerializer
+)
 
 
 User = get_user_model()
 
 
-class CreateListDestroyViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CreateListDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
     pass
 
 
@@ -35,6 +47,7 @@ class CategoriesViewSet(CreateListDestroyViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = ('slug')
+
 
 class GenresViewSet(CreateListDestroyViewSet):
     queryset = Genres.objects.all()
@@ -59,6 +72,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Получение списка/создание/обновление/удаление отзывов."""
     serializer_class = ReviewSerializer
+    permission_classes = (AuthorModeratorAdminOrReadOnly,)
 
     def define_title(self):
         return get_object_or_404(Titles, id=self.kwargs.get("title_id"))
@@ -86,7 +100,6 @@ class CommentsViewSet(ReviewViewSet):
     def perform_create(self, serializer):
         review = self.define_review()
         serializer.save(author=self.request.user, review=review)
-
 
 
 class UsersViewSet(ModelViewSet):
