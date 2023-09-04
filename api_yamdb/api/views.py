@@ -235,7 +235,7 @@ class APIToken(views.APIView):
             if user.confirmation_code == conf_code:
                 token = RefreshToken.for_user(user)
                 return Response(
-                    {'token': token.accesse_token},
+                    {'token': str(token.access_token)},
                     status=status.HTTP_200_OK
                 )
             return Response(
