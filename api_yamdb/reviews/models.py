@@ -93,6 +93,19 @@ class Review(models.Model):
         auto_now_add=True,
         verbose_name='Дата отзыва'
     )
+    title = models.ForeignKey(
+        'Titles',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение'
+    )
+    author = models.ForeignKey(
+        MyUser,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор'
+    )
+
 
     class Meta:
         ordering = ('-pub_date',)
@@ -166,7 +179,10 @@ class GenresTitles(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
-    title_id = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    title_id = models.ForeignKey(
+      Titles,
+      on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f'{self.genre} {self.titles}'
