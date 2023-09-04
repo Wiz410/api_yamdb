@@ -20,12 +20,6 @@ class MyUser(AbstractUser):
         unique=True,
         max_length=254,
     )
-    bio = models.TextField(
-        'Биография',
-        blank=True,
-        null=True,
-        max_length=512,
-    )
     role = models.CharField(
         'Роль',
         max_length=48,
@@ -33,6 +27,12 @@ class MyUser(AbstractUser):
         null=True,
         choices=CHOISE,
         default=CHOISE[0][0],
+    )
+    bio = models.TextField(
+        'Биография',
+        blank=True,
+        null=True,
+        max_length=512,
     )
     first_name = models.CharField(
         'Имя',

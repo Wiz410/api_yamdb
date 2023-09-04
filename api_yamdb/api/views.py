@@ -15,6 +15,11 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet
 
 from reviews.models import Categories, Genres, Titles, Review
+from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
+from .serializers import CommentsSerializer, ReviewSerializer
+from .permissions import AdminOnly, AdminOrReadOnly
+from .serializers import UsersSerializer
+from .serializers import UserUpdateSerializer
 from .permissions import AdminOnly, AuthorModeratorAdminOrReadOnly
 from .serializers import (
     UsersSerializer, UserUpdateSerializer,
@@ -38,25 +43,30 @@ class CreateListDestroyViewSet(
 class CategoriesViewSet(CreateListDestroyViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
 
 
 class GenresViewSet(CreateListDestroyViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
+
+    def update(self):
+        return Response(status=HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
