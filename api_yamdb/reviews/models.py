@@ -8,7 +8,19 @@ User = get_user_model()
 
 class Review(models.Model):
     """Отзывы пользователей и рейтинг произведений"""
+    title = models.ForeignKey(
+        'Titles',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Произведение'
+    )
     text = models.TextField(verbose_name='Отзыв')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор'
+    )
     score = models.IntegerField(
         verbose_name='Рейтинг',
         validators=[
@@ -27,11 +39,12 @@ class Review(models.Model):
         verbose_name='Произведение'
     )
     author = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор'
     )
+
 
     class Meta:
         ordering = ('-pub_date',)
@@ -46,22 +59,22 @@ class Review(models.Model):
 
 class Comments(models.Model):
     """Комментарии пользователей"""
-    text = models.TextField(verbose_name='Текст комментария')
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата комментария'
-    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Отзыв'
     )
+    text = models.TextField(verbose_name='Текст комментария')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор'
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата комментария'
     )
 
     class Meta:
@@ -100,8 +113,18 @@ class Titles(models.Model):
 
 
 class GenresTitles(models.Model):
-    genre_id = models.ForeignKey(Genres, on_delete=models.SET_NULL,
+    genre = models.ForeignKey(
+        Genres,
+        on_delete=models.SET_NULL,
+<<<<<<<<< Temporary merge branch 1
+        null=True,
+    )
+    titles = models.ForeignKey(
+        Titles,
+        on_delete=models.CASCADE
+=========
         null=True
+>>>>>>>>> Temporary merge branch 2
     )
     title_id = models.ForeignKey(Titles, on_delete=models.CASCADE)
 

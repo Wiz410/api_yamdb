@@ -38,3 +38,8 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+
+# Авторы проекта
+[Данила Полунин](https://github.com/Wiz410)\
+[Евгения Загородных](https://github.com/evgeniazagorodnykh)\
+[Александр Волков](https://github.com/alextriano)

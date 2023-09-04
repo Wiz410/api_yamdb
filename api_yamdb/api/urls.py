@@ -28,13 +28,21 @@ v1_router.register(
     UsersViewSet,
     basename='users'
 )
-
-router = routers.DefaultRouter()
-router.register(r'^categories/(?P<slug>[-a-zA-Z0-9_]+)/$',
-                CategoriesViewSet, basename='categories')
-router.register(r'^genres/(?P<slug>[-a-zA-Z0-9_]+)/$',
-                GenresViewSet, basename='genres')
-router.register(r'titles', TitlesViewSet, basename='titles')
+v1_router.register(
+    r'categories',
+    CategoriesViewSet,
+    basename='categories'
+)
+v1_router.register(
+    r'genres',
+    GenresViewSet,
+    basename='genres'
+)
+v1_router.register(
+    r'titles',
+    TitlesViewSet,
+    basename='titles'
+)
 
 auth_patterns = [
     path(

@@ -16,7 +16,14 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Categories
-        fields = '__all__'
+        fields = ('name', 'slug')
+
+    def create(self, validated_data):
+        slug = validated_data['slug']
+        if Categories.objects.filter(slug=slug).exists():
+            raise serializers.ValidationError(
+                'Такая категория уже существует')
+        return Categories.objects.create(**validated_data)
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -25,7 +32,14 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = '__all__'
+        fields = ('name', 'slug')
+
+    def create(self, validated_data):
+        slug = validated_data['slug']
+        if Genres.objects.filter(slug=slug).exists():
+            raise serializers.ValidationError(
+                'Такой жанр уже существует')
+        return Genres.objects.create(**validated_data)
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -43,6 +57,17 @@ class TitlesSerializer(serializers.ModelSerializer):
         if value > dt.datetime.now().year:
             raise serializers.ValidationError('Неправильно указан год выпуска')
         return value
+    
+    def create(self, validated_data):
+        category = validated_data['category']
+        genre = validated_data['genre']
+        if not Categories.objects.filter(slug=category).exists():
+            raise serializers.ValidationError(
+                'Такой категори не существует')
+        if not Genres.objects.filter(slug=genre).exists():
+            raise serializers.ValidationError(
+                'Такого жанра не существует')
+        return Titles.objects.create(**validated_data)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

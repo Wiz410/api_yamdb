@@ -4,23 +4,37 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters, permissions
+from rest_framework import viewsets, mixins, filters, status, views
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
-from rest_framework.status import HTTP_400_BAD_REQUEST
-from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from reviews.models import Categories, Genres, Titles, Review
+from api.serializers import (
+    CategoriesSerializer,
+    GenresSerializer,
+    TitlesSerializer,
+)
+from .serializers import (
+    UsersSerializer,
+    UserUpdateSerializer,
+    CommentsSerializer,
+    ReviewSerializer,
+    SignUpSerializer,
+    TokenSerializer,
+)
 from rest_framework.viewsets import ModelViewSet
 
 from reviews.models import Categories, Genres, Titles, Review
-from api.serializers import CategoriesSerializer, GenresSerializer, TitlesSerializer
-from .serializers import CommentsSerializer, ReviewSerializer
-from .permissions import AdminOnly
-from .serializers import UsersSerializer
-from .serializers import UserUpdateSerializer
+from .permissions import AdminOnly, AdminOrReadOnly, AuthorModeratorAdminOrReadOnly
+from .serializers import (
+    UsersSerializer, UserUpdateSerializer,
+    CategoriesSerializer, GenresSerializer, TitlesSerializer,
+    CommentsSerializer, ReviewSerializer
+)
 
 
 User = get_user_model()
@@ -38,25 +52,31 @@ class CreateListDestroyViewSet(
 class CategoriesViewSet(CreateListDestroyViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
+
 
 
 class GenresViewSet(CreateListDestroyViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('slug',)
+    search_fields = ('name',)
+    lookup_field = ('slug')
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
+
+    def update(self):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -92,8 +112,7 @@ class CommentsViewSet(ReviewViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-
-class UsersViewSet(ModelViewSet):
+class UsersViewSet(viewsets.ModelViewSet):
     """Обработка запросов `users`.
     Запросы к `api/v1/users/` доступны
     только админу и суперпользователю.
