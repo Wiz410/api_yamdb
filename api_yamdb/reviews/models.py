@@ -9,7 +9,7 @@ User = get_user_model()
 class Review(models.Model):
     """Отзывы пользователей и рейтинг произведений"""
     title = models.ForeignKey(
-        'Titles',
+        'Title',
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение'
@@ -31,18 +31,6 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата отзыва'
-    )
-    title = models.ForeignKey(
-        'Titles',
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Произведение'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Автор'
     )
 
     class Meta:
@@ -83,7 +71,7 @@ class Comments(models.Model):
 
 class Categories(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=256, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
@@ -91,13 +79,13 @@ class Categories(models.Model):
 
 class Genres(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=256, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.IntegerField('Дата публикации')
     description = models.TextField(null=True, blank=True)
@@ -118,7 +106,7 @@ class GenresTitles(models.Model):
         null=True,
     )
     title_id = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         null=True
     )

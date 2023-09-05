@@ -1,5 +1,6 @@
 import uuid
 
+from django.db.models import Avg
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
@@ -13,12 +14,15 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import (
+    PageNumberPagination,
+    LimitOffsetPagination
+)
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Categories, Genres, Titles, Review
+from reviews.models import Categories, Genres, Title, Review
 from .serializers import (
     UsersSerializer,
     UserUpdateSerializer,
@@ -26,7 +30,8 @@ from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
     ReviewSerializer,
-    TitlesSerializer,
+    TitlesReadSerializer,
+    TitlesWriteSerializer,
     SignUpSerializer,
     TokenSerializer,
 )
@@ -35,6 +40,7 @@ from .permissions import (
     AdminOrReadOnly,
     AuthorModeratorAdminOrReadOnly
 )
+from .filters import ModelFilter
 
 
 User = get_user_model()
@@ -53,6 +59,7 @@ class CategoriesViewSet(CreateListDestroyViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     permission_classes = (AdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = ('slug')
@@ -62,20 +69,30 @@ class GenresViewSet(CreateListDestroyViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     permission_classes = (AdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
     lookup_field = ('slug')
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
-    serializer_class = TitlesSerializer
-    permission_classes = (AdminOrReadOnly,)
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).order_by('id')
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('genre__slug', 'category__slug', 'year', 'name')
+    filterset_class = ModelFilter
+    permission_classes = (AdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
 
-    def update(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesReadSerializer
+        return TitlesWriteSerializer
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -84,7 +101,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorModeratorAdminOrReadOnly,)
 
     def define_title(self):
-        return get_object_or_404(Titles, id=self.kwargs.get("title_id"))
+        return get_object_or_404(Title, id=self.kwargs.get("title_id"))
 
     def get_queryset(self):
         title = self.define_title()
@@ -93,6 +110,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = self.define_title()
         serializer.save(author=self.request.user, title=title)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class CommentsViewSet(ReviewViewSet):
@@ -109,6 +131,11 @@ class CommentsViewSet(ReviewViewSet):
     def perform_create(self, serializer):
         review = self.define_review()
         serializer.save(author=self.request.user, review=review)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

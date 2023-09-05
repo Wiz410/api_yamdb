@@ -8,7 +8,7 @@ from reviews.models import (
     GenresTitles,
     Genres,
     Review,
-    Titles,
+    Title,
 )
 from users.models import MyUser
 
@@ -18,7 +18,7 @@ MODEL_PATH = (
     (MyUser, 'static/data/users.csv'),
     (Categories, 'static/data/category.csv'),
     (Genres, 'static/data/genre.csv'),
-    (Titles, 'static/data/titles.csv'),
+    (Title, 'static/data/titles.csv'),
     (Review, 'static/data/review.csv'),
     (Comments, 'static/data/comments.csv'),
     (GenresTitles, 'static/data/genre_title.csv'),
@@ -30,6 +30,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """Импорт данных.
+
+        Raise:
+            Импорт только для путой базы данных.
+            Изменение порядка в MODEL_PATH
+            приведет к ошибке иморта.
+
+        Examples:
+            >>> python manage.py migrate
+            >>> python manage.py import
+            >>> Загрузка завершена
         """
         for model, path in MODEL_PATH:
             with open(
@@ -38,8 +48,6 @@ class Command(BaseCommand):
                 encoding='utf8'
             ) as csv_file:
                 for data in csv.DictReader(csv_file):
-                    print(model)
-                    print(data)
                     if data.get('category') is not None:
                         data['category'] = Categories.objects.get(
                             id=data['category']
@@ -49,18 +57,17 @@ class Command(BaseCommand):
                             id=data['author']
                         )
                     if data.get('title') is not None:
-                        data['title'] = Titles.objects.get(
+                        data['title'] = Title.objects.get(
                             id=data['title']
                         )
                     if (data.get('title_id') is not None
                        and data.get('genre_id') is not None):
-                        data['title_id'] = Titles.objects.get(
+                        data['title_id'] = Title.objects.get(
                             id=data['title_id']
                         )
                         data['genre_id'] = Genres.objects.get(
                             id=data['genre_id']
                         )
-                    print(data)
                     model.objects.create(**data)
         self.stdout.write(
             'Загрузка завершена'

@@ -4,19 +4,26 @@ from rest_framework import serializers
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 
-from reviews.models import Categories, Genres, Titles, Review, Comments
+from reviews.models import (
+    Categories,
+    Genres,
+    Title,
+    Review,
+    Comments,
+)
 
 
 User = get_user_model()
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField(max_length=50)
-    name = serializers.CharField(max_length=256)
 
     class Meta:
         model = Categories
-        fields = ('name', 'slug')
+        fields = (
+            'name',
+            'slug'
+        )
 
     def create(self, validated_data):
         slug = validated_data['slug']
@@ -27,12 +34,13 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField(max_length=50)
-    name = serializers.CharField(max_length=256)
 
     class Meta:
         model = Genres
-        fields = ('name', 'slug')
+        fields = (
+            'name',
+            'slug',
+        )
 
     def create(self, validated_data):
         slug = validated_data['slug']
@@ -42,13 +50,47 @@ class GenresSerializer(serializers.ModelSerializer):
         return Genres.objects.create(**validated_data)
 
 
-class TitlesSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(many=True)
-    categories = CategoriesSerializer()
+class TitlesReadSerializer(serializers.ModelSerializer):
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = Titles
-        fields = '__all__'
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'rating',
+            'category',
+        )
+
+
+class TitlesWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Categories.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        many=True,
+        queryset=Genres.objects.all()
+    )
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'rating',
+            'category',
+        )
 
     def validate_year(self, value):
         """
@@ -57,17 +99,6 @@ class TitlesSerializer(serializers.ModelSerializer):
         if value > dt.datetime.now().year:
             raise serializers.ValidationError('Неправильно указан год выпуска')
         return value
-
-    def create(self, validated_data):
-        category = validated_data['category']
-        genre = validated_data['genre']
-        if not Categories.objects.filter(slug=category).exists():
-            raise serializers.ValidationError(
-                'Такой категори не существует')
-        if not Genres.objects.filter(slug=genre).exists():
-            raise serializers.ValidationError(
-                'Такого жанра не существует')
-        return Titles.objects.create(**validated_data)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

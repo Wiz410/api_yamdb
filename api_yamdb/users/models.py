@@ -15,7 +15,6 @@ class MyUser(AbstractUser):
         'Имя пользователя',
         unique=True,
         max_length=150,
-        null=True,
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
@@ -26,7 +25,6 @@ class MyUser(AbstractUser):
     email = models.EmailField(
         'Адрес электронной почты',
         unique=True,
-        null=True,
         max_length=254,
     )
     role = models.CharField(
