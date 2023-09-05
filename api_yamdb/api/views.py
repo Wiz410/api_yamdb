@@ -223,7 +223,7 @@ class APISingUp(views.APIView):
     Запросы к `api/v1/auth/signup/` доступны всем пользователям.
 
     Returns:
-        POST(json): Создание пользователя и код подтверждения для API.
+        POST(json): Создание пользователя и кода подтверждения для API.
     """
     permission_classes = (AllowAny,)
 
