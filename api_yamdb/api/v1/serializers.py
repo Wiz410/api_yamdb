@@ -1,6 +1,7 @@
 import datetime as dt
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 
@@ -17,6 +18,10 @@ User = get_user_model()
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(
+        max_length=50,
+        validators=[UniqueValidator(queryset=Categories.objects.all())]
+    )
 
     class Meta:
         model = Categories
@@ -25,15 +30,12 @@ class CategoriesSerializer(serializers.ModelSerializer):
             'slug'
         )
 
-    def create(self, validated_data):
-        slug = validated_data['slug']
-        if Categories.objects.filter(slug=slug).exists():
-            raise serializers.ValidationError(
-                'Такая категория уже существует')
-        return Categories.objects.create(**validated_data)
-
 
 class GenresSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(
+        max_length=50,
+        validators=[UniqueValidator(queryset=Genres.objects.all())]
+    )
 
     class Meta:
         model = Genres
@@ -41,13 +43,6 @@ class GenresSerializer(serializers.ModelSerializer):
             'name',
             'slug',
         )
-
-    def create(self, validated_data):
-        slug = validated_data['slug']
-        if Genres.objects.filter(slug=slug).exists():
-            raise serializers.ValidationError(
-                'Такой жанр уже существует')
-        return Genres.objects.create(**validated_data)
 
 
 class TitlesReadSerializer(serializers.ModelSerializer):

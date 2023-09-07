@@ -70,30 +70,70 @@ class Comments(models.Model):
 
 
 class Categories(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    """Категории произведений"""
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Слаг'
+    )
+
+    class Meta:
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return self.name
 
 
 class Genres(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    """Жанры произведений"""
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Слаг'
+    )
+
+    class Meta:
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.IntegerField('Дата публикации')
-    description = models.TextField(null=True, blank=True)
-    genre = models.ManyToManyField(Genres, through='GenresTitles',)
-    category = models.ForeignKey(
-        Categories, on_delete=models.SET_NULL,
-        null=True, related_name='titles'
+    """Произведения"""
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название'
     )
+    year = models.PositiveIntegerField('Дата публикации')
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Описание'
+    )
+    genre = models.ManyToManyField(
+        Genres,
+        through='GenresTitles',
+        verbose_name='Жанр'
+    )
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='titles',
+        verbose_name='Категория'
+    )
+
+    class Meta:
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name
@@ -104,11 +144,13 @@ class GenresTitles(models.Model):
         Genres,
         on_delete=models.SET_NULL,
         null=True,
+        verbose_name='Жанр'
     )
     title_id = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        null=True
+        null=True,
+        verbose_name='Произведение'
     )
 
     def __str__(self):
