@@ -18,6 +18,10 @@ class AdminOnly(permissions.BasePermission):
 
 
 class AdminOrReadOnly(permissions.BasePermission):
+    """
+    Разрешение для: админа и суперпользователя.
+    """
+
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.is_authenticated
