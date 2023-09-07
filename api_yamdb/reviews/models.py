@@ -21,7 +21,7 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор'
     )
-    score = models.IntegerField(
+    score = models.PositiveIntegerField(
         verbose_name='Рейтинг',
         validators=[
             MaxValueValidator(10),
