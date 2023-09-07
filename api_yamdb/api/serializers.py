@@ -76,8 +76,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username'
     )
 
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
     def validate(self, data):
-        if self.context['request'].method != 'POST':
+        if self.context.get('request').method != 'POST':
             return data
         title_id = self.context['view'].kwargs.get('title_id')
         author = self.context['request'].user
@@ -86,10 +90,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Уже существует отзыв от пользователя к данному произведению'
             )
         return data
-
-    class Meta:
-        model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class CommentsSerializer(serializers.ModelSerializer):
