@@ -21,7 +21,7 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор'
     )
-    score = models.IntegerField(
+    score = models.PositiveIntegerField(
         verbose_name='Рейтинг',
         validators=[
             MaxValueValidator(10),
@@ -99,7 +99,7 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     name = models.CharField(max_length=256)
-    year = models.IntegerField('Дата публикации')
+    year = models.PositiveIntegerField('Дата публикации')
     description = models.TextField(null=True, blank=True)
     genre = models.ManyToManyField(Genres, through='GenresTitles',)
     category = models.ForeignKey(
