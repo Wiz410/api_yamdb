@@ -2,10 +2,14 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+USER: str = 'user'
+MODERATOR: str = 'moderator'
+ADMIN: str = 'admin'
+
 CHOISE: tuple[tuple[str, str]] = (
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Админ'),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Админ'),
 )
 
 
@@ -32,18 +36,13 @@ class MyUser(AbstractUser):
         max_length=50,
         null=True,
         choices=CHOISE,
-        default=CHOISE[0][0],
+        default=USER,
     )
     bio = models.TextField(
         'Биография',
         blank=True,
         null=True,
         max_length=512,
-    )
-    confirmation_code = models.CharField(
-        'Код подтверждения',
-        max_length=100,
-        null=True
     )
 
     USERNAME_FIELD = 'username'
@@ -53,6 +52,18 @@ class MyUser(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('id', 'username')
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
 
     def __srt__(self):
         return self.username

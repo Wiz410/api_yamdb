@@ -1,7 +1,6 @@
-import uuid
-
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
@@ -218,6 +217,25 @@ class UsersViewSet(viewsets.ModelViewSet):
         )
 
 
+def message_mail(code: str, user_mail: str) -> None:
+    """Отправка сообщения с кодом подтверждения.
+
+    Args:
+        code (str): Сгенерированный код подтверждение.
+        user_mail (str): Почта пользователя
+    """
+    title: str = 'Confirmation code YAMDB.'
+    message: str = f'Ваш код подтверждения "{code}" для сервиса YAMDB.'
+    our_mail: str = 'code@yamdb.ru'
+    send_mail(
+        subject=title,
+        message=message,
+        from_email=our_mail,
+        recipient_list=[user_mail],
+        fail_silently=True,
+    )
+
+
 class APISingUp(views.APIView):
     """Регистрация пользователя.
     Запросы к `api/v1/auth/signup/` доступны всем пользователям.
@@ -230,22 +248,12 @@ class APISingUp(views.APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
-            code = uuid.uuid4()
             current_user, created = User.objects.get_or_create(
                 **serializer.validated_data
             )
-            current_user.confirmation_code = str(code)
-            current_user.save()
-            send_mail(
-                subject='Confirmation code YAMDB.',
-                message=(
-                    f'Ваш код подтверждения "{str(code)}" '
-                    'для сервиса YAMDB.'
-                ),
-                from_email='code@yamdb.ru',
-                recipient_list=[serializer.validated_data['email']],
-                fail_silently=True,
-            )
+            code = default_token_generator.make_token(current_user)
+            email = serializer.validated_data['email']
+            message_mail(code, email)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -273,7 +281,7 @@ class APIToken(views.APIView):
             user = get_object_or_404(
                 User, username=user
             )
-            if user.confirmation_code == conf_code:
+            if default_token_generator.check_token(user, conf_code):
                 token = RefreshToken.for_user(user)
                 return Response(
                     {'token': str(token.access_token)},

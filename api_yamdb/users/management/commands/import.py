@@ -10,12 +10,11 @@ from reviews.models import (
     Review,
     Title,
 )
-from users.models import MyUser
 
 User = get_user_model()
 
 MODEL_PATH = (
-    (MyUser, 'static/data/users.csv'),
+    (User, 'static/data/users.csv'),
     (Categories, 'static/data/category.csv'),
     (Genres, 'static/data/genre.csv'),
     (Title, 'static/data/titles.csv'),
@@ -26,21 +25,24 @@ MODEL_PATH = (
 
 
 class Command(BaseCommand):
+    """Импорт данных.
+
+    Raise:
+        Импорт только для пустой базы данных.
+        Изменение порядка в MODEL_PATH
+        приведет к ошибке импорта.
+
+    Examples:
+        >>> python manage.py migrate
+        >>> python manage.py import
+        >>> Загрузка завершена
+    """
     help = 'Импорт данных из csv в базу данных.'
 
     def handle(self, *args, **kwargs):
-        """Импорт данных.
-
-        Raise:
-            Импорт только для пустой базы данных.
-            Изменение порядка в MODEL_PATH
-            приведет к ошибке импорта.
-
-        Examples:
-            >>> python manage.py migrate
-            >>> python manage.py import
-            >>> Загрузка завершена
-        """
+        self.stdout.write(
+            self.style.SUCCESS('Импорт запушен.')
+        )
         for model, path in MODEL_PATH:
             with open(
                 path,
@@ -53,7 +55,7 @@ class Command(BaseCommand):
                             id=data['category']
                         )
                     if data.get('author') is not None:
-                        data['author'] = MyUser.objects.get(
+                        data['author'] = User.objects.get(
                             id=data['author']
                         )
                     if data.get('title') is not None:
@@ -69,6 +71,10 @@ class Command(BaseCommand):
                             id=data['genre_id']
                         )
                     model.objects.create(**data)
+                self.stdout.write(
+                    f'Данные в модель: {model._meta.object_name} '
+                    'импортированы.'
+                )
         self.stdout.write(
-            'Загрузка завершена'
+            self.style.SUCCESS('Импорт завершен.')
         )
