@@ -12,7 +12,7 @@
 Для регистрации/аутентификации пользователей используется только метод POST.\
 Аутентификация - с помощью JWT-токенов.
 ### Инструменты:
-- [Python 3.11]([Python](https://docs.python.org/3.11/))
+- [Python 3.11](https://docs.python.org/3.11/)
 - [Django 3.2](https://docs.djangoproject.com/en/4.2/releases/3.2/)
 - [Django Rest Framework 3.12](https://www.django-rest-framework.org/)
 - [Simple JWT 5.2](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/)
