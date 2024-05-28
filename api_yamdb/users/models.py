@@ -1,10 +1,15 @@
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+USER: str = 'user'
+MODERATOR: str = 'moderator'
+ADMIN: str = 'admin'
+
 CHOISE: tuple[tuple[str, str]] = (
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Админ'),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Админ'),
 )
 
 
@@ -14,40 +19,30 @@ class MyUser(AbstractUser):
         'Имя пользователя',
         unique=True,
         max_length=150,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Некорректный ввод'
+            )
+        ]
     )
     email = models.EmailField(
         'Адрес электронной почты',
         unique=True,
         max_length=254,
     )
+    role = models.CharField(
+        'Роль',
+        max_length=50,
+        null=True,
+        choices=CHOISE,
+        default=USER,
+    )
     bio = models.TextField(
         'Биография',
         blank=True,
         null=True,
         max_length=512,
-    )
-    role = models.CharField(
-        'Роль',
-        max_length=48,
-        blank=True,
-        null=True,
-        choices=CHOISE,
-        default=CHOISE[0][0],
-    )
-    first_name = models.CharField(
-        'Имя',
-        max_length=150,
-        blank=True,
-    )
-    last_name = models.CharField(
-        'Фамилия',
-        max_length=150,
-        blank=True,
-    )
-    confirmation_code = models.CharField(
-        'Код подтверждения',
-        max_length=500,
-        blank=True,
     )
 
     USERNAME_FIELD = 'username'
@@ -57,6 +52,18 @@ class MyUser(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('id', 'username')
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
 
     def __srt__(self):
         return self.username

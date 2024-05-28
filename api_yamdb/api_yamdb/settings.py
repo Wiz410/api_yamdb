@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,11 +16,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_filters',
     'rest_framework',
+    'django_filters',
     'users.apps.UsersConfig',
+    'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-    'reviews',
 ]
 
 REST_FRAMEWORK = {
@@ -31,6 +32,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 MIDDLEWARE = [
@@ -87,6 +93,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'users.MyUser'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = BASE_DIR / 'send_emails'
 
 LANGUAGE_CODE = 'en-us'
 
